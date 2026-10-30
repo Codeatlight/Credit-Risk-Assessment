@@ -2,7 +2,7 @@
 
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
-> Status: set up. No analysis yet; the results sections get filled in as the work is done.
+> Status: data explored and holdout set aside (step 1 done). Results get filled in as the work is done.
 
 ## Data
 
