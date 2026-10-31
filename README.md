@@ -2,7 +2,7 @@
 
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
-> Status: data explored, holdout set aside, and features built, a baseline set, a scorecard and a LightGBM challenger built, and all models tested on the holdout (steps 1 to 6 done). Results get filled in as the work is done.
+> Status: data explored, holdout set aside, and features built, a baseline set, a scorecard and a LightGBM challenger built, all models tested on the holdout, and approval cutoffs chosen from profit (steps 1 to 7 done). Results get filled in as the work is done.
 
 ## Data
 
@@ -24,7 +24,7 @@ Should a lender approve this applicant? This project predicts the chance of defa
 4. **Scorecard.** Bin features, compute Weight of Evidence and Information Value, and fit a logistic model that converts to points, like a CIBIL-style score. Run `python -m src.scorecard`. Cross-validated dev results and the points table are in the [scorecard report](reports/scorecard_results.md).
 5. **Challenger model.** LightGBM with cross-validation. Report what extra accuracy costs in explainability. Run `python -m src.challenger`. Cross-validated dev results are in the [challenger report](reports/challenger_results.md).
 6. **Evaluate.** AUC, Gini, KS statistic, and calibration (does a predicted 10% risk really default about 10% of the time?). `python -m src.evaluate` scores the holdout once and then refuses to run again. Full tables are in the [holdout report](reports/holdout_results.md).
-7. **Business decision.** Choose the approval cutoff from expected profit. Loss per default and interest margin are assumptions, stated openly, with a sensitivity table.
+7. **Business decision.** Choose the approval cutoff from expected profit. Loss per default and interest margin are assumptions, stated openly, with a sensitivity table. Run `python -m src.cutoff`. Results are in the [cutoff report](reports/cutoff_results.md).
 8. **Explain and check fairness.** SHAP reasons for individual decisions; compare approval and error rates across gender and age groups.
 9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons.
 
@@ -37,7 +37,7 @@ notebooks/         Exploration and experiments, numbered in order
 src/               Reusable code: features, scorecard, evaluation
 models/            Saved models (not in git)
 app/               Streamlit app
-reports/           Feature dictionary, sanity report, baseline, scorecard, challenger and holdout results
+reports/           Feature dictionary, sanity report, baseline, scorecard, challenger, holdout and cutoff results
 reports/figures/   Charts for the README
 ```
 
@@ -62,4 +62,15 @@ Scored once on the 61,503 holdout applicants, using models fitted on dev rows on
 | Scorecard, with `EXT_SOURCE` | 15 lines | 0.753 | 0.746 to 0.760 | 0.506 | 0.389 |
 | LightGBM, with `EXT_SOURCE` | About 850 trees | 0.788 | 0.782 to 0.795 | 0.576 | 0.438 |
 
-Explainability costs 0.035 to 0.061 of AUC. The approval cutoff and fairness results are still to come.
+Explainability costs 0.035 to 0.061 of AUC.
+
+**Approval cutoff.** Assuming a repaid loan earns 15% of its size and a defaulted loan loses 60%, cutoffs chosen on dev rows and measured on the holdout give:
+
+| Model | Approved | Default rate if approved | Profit per applicant | Gain over approving everyone |
+| --- | --- | --- | --- | --- |
+| Scorecard, without `EXT_SOURCE` | 97.0% | 7.4% | 56,646 | 824 |
+| LightGBM, without `EXT_SOURCE` | 90.5% | 5.9% | 58,928 | 3,106 |
+| Scorecard, with `EXT_SOURCE` | 91.6% | 6.3% | 58,239 | 2,417 |
+| LightGBM, with `EXT_SOURCE` | 90.3% | 5.5% | 60,172 | 4,350 |
+
+These money figures depend on the assumptions, not on observed lending profit. Fairness results are still to come.
