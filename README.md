@@ -2,7 +2,7 @@
 
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
-> Status: data explored, holdout set aside, and features built, a baseline set, a scorecard and a LightGBM challenger built, all models tested on the holdout, and approval cutoffs chosen from profit (steps 1 to 7 done). Results get filled in as the work is done.
+> Status: data explored, holdout set aside, and features built, a baseline set, a scorecard and a LightGBM challenger built, all models tested on the holdout, approval cutoffs chosen from profit, and reasons and fairness checked (steps 1 to 8 done). Results get filled in as the work is done.
 
 ## Data
 
@@ -25,7 +25,7 @@ Should a lender approve this applicant? This project predicts the chance of defa
 5. **Challenger model.** LightGBM with cross-validation. Report what extra accuracy costs in explainability. Run `python -m src.challenger`. Cross-validated dev results are in the [challenger report](reports/challenger_results.md).
 6. **Evaluate.** AUC, Gini, KS statistic, and calibration (does a predicted 10% risk really default about 10% of the time?). `python -m src.evaluate` scores the holdout once and then refuses to run again. Full tables are in the [holdout report](reports/holdout_results.md).
 7. **Business decision.** Choose the approval cutoff from expected profit. Loss per default and interest margin are assumptions, stated openly, with a sensitivity table. Run `python -m src.cutoff`. Results are in the [cutoff report](reports/cutoff_results.md).
-8. **Explain and check fairness.** SHAP reasons for individual decisions; compare approval and error rates across gender and age groups.
+8. **Explain and check fairness.** SHAP reasons for individual decisions; compare approval and error rates across gender and age groups. Run `python -m src.reasons` and `python -m src.fairness`. See the [reasons report](reports/reasons_results.md) and [fairness report](reports/fairness_results.md).
 9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons.
 
 ## Project layout
@@ -37,7 +37,7 @@ notebooks/         Exploration and experiments, numbered in order
 src/               Reusable code: features, scorecard, evaluation
 models/            Saved models (not in git)
 app/               Streamlit app
-reports/           Feature dictionary, sanity report, baseline, scorecard, challenger, holdout and cutoff results
+reports/           Feature dictionary, sanity report, baseline, scorecard, challenger, holdout, cutoff, reasons and fairness results
 reports/figures/   Charts for the README
 ```
 
@@ -73,4 +73,6 @@ Explainability costs 0.035 to 0.061 of AUC.
 | Scorecard, with `EXT_SOURCE` | 91.6% | 6.3% | 58,239 | 2,417 |
 | LightGBM, with `EXT_SOURCE` | 90.3% | 5.5% | 60,172 | 4,350 |
 
-These money figures depend on the assumptions, not on observed lending profit. Fairness results are still to come.
+These money figures depend on the assumptions, not on observed lending profit.
+
+**Fairness.** No model uses gender or age directly, and all four pass the four-fifths screening rule on approval rates. The tightest case is age for the scorecard with `EXT_SOURCE`, with a ratio of 0.82. Age gaps are the main concern: that model refuses about 15 percentage points more good payers in one age group than in another. These are measurements, not a legal judgement.
