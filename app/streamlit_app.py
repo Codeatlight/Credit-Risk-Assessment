@@ -2,7 +2,9 @@
 
 Run from the project root:  streamlit run app/streamlit_app.py
 """
+from base64 import b64encode
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
@@ -10,9 +12,19 @@ from scoring import is_approved, load_card, reasons, risk_of_default, score
 
 SCORE_LOW = 300
 SCORE_HIGH = 800
+BACKGROUND = Path(__file__).parent / "background.svg"
 
 STYLE = """
 <style>
+.stApp::before {content: ""; position: fixed; inset: 0 -4%; z-index: 0; pointer-events: none;
+                background: url("data:image/svg+xml;base64,BACKGROUND_DATA") bottom / 100% 75vh no-repeat;
+                animation: drift 45s ease-in-out infinite alternate}
+@keyframes drift {from {transform: translateX(-2%)} to {transform: translateX(2%)}}
+@media (prefers-reduced-motion: reduce) {.stApp::before {animation: none}}
+[data-testid="stAppViewContainer"], [data-testid="stHeader"] {background: transparent}
+[data-testid="stAppViewContainer"] {position: relative; z-index: 1}
+.st-key-layout [data-testid="stSelectbox"] > div > div {background: #FFFFFF}
+.st-key-form-panel, .st-key-notes-panel {background: #F4F6F6; padding: 1.5rem}
 .block-container {max-width: 1240px; padding-top: 2.5rem; padding-bottom: 4rem}
 h1 {font-size: 3rem; letter-spacing: -0.02em; line-height: 1.05}
 h2 {font-size: 1.35rem; letter-spacing: -0.01em}
@@ -46,7 +58,7 @@ h2 {font-size: 1.35rem; letter-spacing: -0.01em}
 """
 
 st.set_page_config(page_title="Credit Risk Scorecard", layout="wide")
-st.html(STYLE)
+st.html(STYLE.replace("BACKGROUND_DATA", b64encode(BACKGROUND.read_bytes()).decode()))
 card = load_card()
 
 
@@ -103,15 +115,16 @@ with st.container(key="layout"):
     form, result = st.columns([3, 2], gap="large")
 
 with form:
-    for group in dict.fromkeys(q["group"] for q in card["questions"]):
-        st.subheader(group)
-        left, right = st.columns(2)
-        questions = [q for q in card["questions"] if q["group"] == group]
-        for position, q in enumerate(questions):
-            labels = [a["label"] for a in q["answers"]]
-            with left if position % 2 == 0 else right:
-                answers[q["feature"]] = st.selectbox(q["question"], range(len(labels)), index=q["default"],
-                                                     format_func=labels.__getitem__, key=q["feature"])
+    with st.container(key="form-panel"):
+        for group in dict.fromkeys(q["group"] for q in card["questions"]):
+            st.subheader(group)
+            left, right = st.columns(2)
+            questions = [q for q in card["questions"] if q["group"] == group]
+            for position, q in enumerate(questions):
+                labels = [a["label"] for a in q["answers"]]
+                with left if position % 2 == 0 else right:
+                    answers[q["feature"]] = st.selectbox(q["question"], range(len(labels)), index=q["default"],
+                                                         format_func=labels.__getitem__, key=q["feature"])
 
 total = score(card, answers)
 against, helping = reasons(card, answers)
@@ -120,11 +133,25 @@ with result:
     with st.container(key="result"):
         st.html(result_html(total, risk_of_default(card, total), against, helping))
 
-st.subheader("How the score adds up")
-st.html(ledger_html(total, answers))
+with st.container(key="notes-panel"):
+    st.subheader("How the score adds up")
+    st.html(ledger_html(total, answers))
 
-st.subheader("How this works, and its limits")
-model_notes, limit_notes = st.columns(2, gap="large")
+    st.subheader("In plain English")
+    st.markdown(
+        "**What this does.** A lender has to guess who will repay. This tool turns 15 facts about an applicant into "
+        "one score, then approves or refuses, and shows which facts helped or hurt.\n\n"
+        "**What we expected.** Applicants with higher scores should default less often, and a score that can be "
+        "explained line by line should cost some accuracy against a harder-to-explain model.\n\n"
+        "**What happened.** Among applicants the model had never seen, about 18% of those scoring 500 to 549 ran "
+        "into payment trouble, against about 3% of those scoring 650 to 699. The best complex model was more "
+        "accurate, as expected.\n\n"
+        "**How we checked.** We kept 20% of applicants aside and tested on them once at the end. With the outcomes "
+        "shuffled at random, the models scored no better than chance, which is what an honest setup should do. "
+        "The numbers on this page match the saved model on 3,000 of those applicants.")
+
+    st.subheader("How this works, and its limits")
+    model_notes, limit_notes = st.columns(2, gap="large")
 model_notes.markdown(
     "**Model.** A 15-line scorecard without the undocumented `EXT_SOURCE` scores, chosen because every point can "
     "be explained. On 61,503 applicants held back from training it reached AUC 0.704. LightGBM with `EXT_SOURCE` "
@@ -138,3 +165,4 @@ limit_notes.markdown(
     "over. Men's risk was underestimated by about 1.2 points and women's overestimated by about 0.6.\n\n"
     "**Limits.** The data only covers people who were given loans. Answers here aren't checked against each other, "
     "so a form can describe an applicant who couldn't exist.")
+st.caption("Background image: how real applicants' scores are spread, drawn as bars. Tinted bars fall below the cutoff.")
