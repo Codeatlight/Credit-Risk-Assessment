@@ -34,6 +34,7 @@ STYLE = """
 .hero.compact .lead {margin-bottom: 0}
 .home {padding: 2.75rem 2.5rem}
 .home-grid {display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.5rem; align-items: center}
+.home-grid > * {min-width: 0}
 .home h1 {font-size: 3.4rem !important; line-height: 1.05}
 .home .lead {font-size: 1.15rem; margin: 0.9rem 0 1.75rem}
 .home .stats {grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))}
@@ -133,6 +134,10 @@ STYLE = """
   transition: background 0.3s, border-color 0.3s, box-shadow 0.5s}
 @media (prefers-reduced-motion: reduce) {
   .hero::before, .count, .change, .decision.flipped, .ring {animation: none}
+}
+@media (max-width: 960px) {
+  .home-grid {grid-template-columns: 1fr; gap: 1.75rem}
+  .preview {max-width: 440px}
 }
 @media (max-width: 640px) {
   .hero {padding: 1.5rem 1.25rem}

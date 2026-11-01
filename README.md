@@ -2,6 +2,10 @@
 
 ![Banner](docs/banner.png)
 
+**Live app:** https://credit-risk-scorecard-n902.onrender.com
+
+> The app runs on Render's free tier, so the first visit after a quiet spell can take about a minute while it wakes up.
+
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
 > Status: all 9 planned steps are done, from data exploration to a working app. Final results are below.
