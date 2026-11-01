@@ -2,7 +2,7 @@
 
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
-> Status: data explored, holdout set aside, and features built, a baseline set, a scorecard and a LightGBM challenger built, all models tested on the holdout, approval cutoffs chosen from profit, and reasons and fairness checked (steps 1 to 8 done). Results get filled in as the work is done.
+> Status: all 9 planned steps are done, from data exploration to a working app. Final results are below.
 
 ## Data
 
@@ -26,7 +26,7 @@ Should a lender approve this applicant? This project predicts the chance of defa
 6. **Evaluate.** AUC, Gini, KS statistic, and calibration (does a predicted 10% risk really default about 10% of the time?). `python -m src.evaluate` scores the holdout once and then refuses to run again. Full tables are in the [holdout report](reports/holdout_results.md).
 7. **Business decision.** Choose the approval cutoff from expected profit. Loss per default and interest margin are assumptions, stated openly, with a sensitivity table. Run `python -m src.cutoff`. Results are in the [cutoff report](reports/cutoff_results.md).
 8. **Explain and check fairness.** SHAP reasons for individual decisions; compare approval and error rates across gender and age groups. Run `python -m src.reasons` and `python -m src.fairness`. See the [reasons report](reports/reasons_results.md) and [fairness report](reports/fairness_results.md).
-9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons.
+9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons. It uses the scorecard without `EXT_SOURCE`, so every point can be explained, and needs only `app/scorecard.json`, not the raw data. `python -m src.export_app` rebuilds that file.
 
 ## Project layout
 
@@ -36,7 +36,7 @@ data/processed/    Built feature tables (not in git)
 notebooks/         Exploration and experiments, numbered in order
 src/               Reusable code: features, scorecard, evaluation
 models/            Saved models (not in git)
-app/               Streamlit app
+app/               Streamlit app and the points it needs
 reports/           Feature dictionary, sanity report, baseline, scorecard, challenger, holdout, cutoff, reasons and fairness results
 reports/figures/   Charts for the README
 ```
@@ -47,6 +47,12 @@ reports/figures/   Charts for the README
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+To run the app:
+
+```bash
+streamlit run app/streamlit_app.py
 ```
 
 ## Results

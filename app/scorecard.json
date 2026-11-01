@@ -1,0 +1,541 @@
+{
+  "model": "Scorecard, Without EXT_SOURCE",
+  "base_points": 593,
+  "offset": 417.80719051126374,
+  "factor": 72.13475204444818,
+  "min_score": 505,
+  "max_risk": 0.23,
+  "questions": [
+    {
+      "feature": "EMPLOYED_YEARS",
+      "group": "Job",
+      "question": "Time in current job",
+      "default": 0,
+      "typical": 2.0,
+      "answers": [
+        {
+          "label": "Up to 2.6 years",
+          "points": -15
+        },
+        {
+          "label": "2.6 years to 4.9 years",
+          "points": -9
+        },
+        {
+          "label": "4.9 years to 6.6 years",
+          "points": 0
+        },
+        {
+          "label": "6.6 years to 10.8 years",
+          "points": 7
+        },
+        {
+          "label": "Over 10.8 years",
+          "points": 22
+        },
+        {
+          "label": "Pensioner or not employed",
+          "points": 18
+        }
+      ]
+    },
+    {
+      "feature": "OCCUPATION_TYPE",
+      "group": "Job",
+      "question": "Occupation",
+      "default": 0,
+      "typical": 1.3,
+      "answers": [
+        {
+          "label": "Not stated",
+          "points": 10
+        },
+        {
+          "label": "Laborers",
+          "points": -13
+        },
+        {
+          "label": "Sales staff",
+          "points": -8
+        },
+        {
+          "label": "Core staff",
+          "points": 11
+        },
+        {
+          "label": "Managers",
+          "points": 12
+        },
+        {
+          "label": "Drivers",
+          "points": -16
+        },
+        {
+          "label": "High skill tech staff",
+          "points": 12
+        },
+        {
+          "label": "Accountants",
+          "points": 26
+        },
+        {
+          "label": "Medicine staff",
+          "points": 7
+        },
+        {
+          "label": "Security staff",
+          "points": -14
+        },
+        {
+          "label": "Cooking staff",
+          "points": -13
+        },
+        {
+          "label": "Cleaning staff",
+          "points": -8
+        },
+        {
+          "label": "Another occupation",
+          "points": -11
+        }
+      ]
+    },
+    {
+      "feature": "ORGANIZATION_TYPE",
+      "group": "Job",
+      "question": "Type of employer",
+      "default": 0,
+      "typical": 0.3,
+      "answers": [
+        {
+          "label": "Business Entity Type 3",
+          "points": -3
+        },
+        {
+          "label": "Pensioner or no employer",
+          "points": 8
+        },
+        {
+          "label": "Self-employed",
+          "points": -5
+        },
+        {
+          "label": "Other",
+          "points": 1
+        },
+        {
+          "label": "Medicine",
+          "points": 3
+        },
+        {
+          "label": "Business Entity Type 2",
+          "points": -1
+        },
+        {
+          "label": "Government",
+          "points": 3
+        },
+        {
+          "label": "School",
+          "points": 6
+        },
+        {
+          "label": "Trade: type 7",
+          "points": -3
+        },
+        {
+          "label": "Kindergarten",
+          "points": 2
+        },
+        {
+          "label": "Construction",
+          "points": -8
+        },
+        {
+          "label": "Business Entity Type 1",
+          "points": 0
+        },
+        {
+          "label": "Transport: type 4",
+          "points": -2
+        },
+        {
+          "label": "Trade: type 3",
+          "points": -5
+        },
+        {
+          "label": "Industry: type 9",
+          "points": 4
+        },
+        {
+          "label": "Industry: type 3",
+          "points": -6
+        },
+        {
+          "label": "Security",
+          "points": -5
+        },
+        {
+          "label": "Another employer type",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "feature": "CREDIT_TO_GOODS",
+      "group": "This loan",
+      "question": "Loan size compared with the goods price",
+      "default": 0,
+      "typical": 1.4,
+      "answers": [
+        {
+          "label": "Up to 1.16 times",
+          "points": 11
+        },
+        {
+          "label": "1.16 times to 1.21 times",
+          "points": -7
+        },
+        {
+          "label": "1.21 times to 1.32 times",
+          "points": -17
+        },
+        {
+          "label": "Over 1.32 times",
+          "points": -28
+        },
+        {
+          "label": "Not recorded",
+          "points": 0
+        }
+      ]
+    },
+    {
+      "feature": "BUREAU_HISTORY_DAYS",
+      "group": "Loans at other lenders",
+      "question": "Length of credit history",
+      "default": 4,
+      "typical": 0.8,
+      "answers": [
+        {
+          "label": "Up to 11 months",
+          "points": -16
+        },
+        {
+          "label": "11 months to 19 months",
+          "points": -10
+        },
+        {
+          "label": "19 months to 35 months",
+          "points": -5
+        },
+        {
+          "label": "35 months to 58 months",
+          "points": 1
+        },
+        {
+          "label": "Over 58 months",
+          "points": 8
+        },
+        {
+          "label": "No record at other lenders",
+          "points": -7
+        }
+      ]
+    },
+    {
+      "feature": "BUREAU_OPENED_COUNT_12M",
+      "group": "Loans at other lenders",
+      "question": "Loans opened in the last 12 months",
+      "default": 0,
+      "typical": 1.8,
+      "answers": [
+        {
+          "label": "0",
+          "points": 16
+        },
+        {
+          "label": "1",
+          "points": 2
+        },
+        {
+          "label": "2",
+          "points": -5
+        },
+        {
+          "label": "3 or more",
+          "points": -24
+        },
+        {
+          "label": "No record at other lenders",
+          "points": -11
+        }
+      ]
+    },
+    {
+      "feature": "BUREAU_ACTIVE_SHARE",
+      "group": "Loans at other lenders",
+      "question": "Share of loans still open at other lenders",
+      "default": 0,
+      "typical": 0.8,
+      "answers": [
+        {
+          "label": "Up to 29%",
+          "points": 11
+        },
+        {
+          "label": "29% to 35%",
+          "points": 6
+        },
+        {
+          "label": "35% to 51%",
+          "points": 0
+        },
+        {
+          "label": "51% to 67%",
+          "points": -7
+        },
+        {
+          "label": "Over 67%",
+          "points": -11
+        },
+        {
+          "label": "No record at other lenders",
+          "points": -7
+        }
+      ]
+    },
+    {
+      "feature": "BUREAU_DEBT_TO_CREDIT",
+      "group": "Loans at other lenders",
+      "question": "Debt left on open loans",
+      "default": 5,
+      "typical": 0.5,
+      "answers": [
+        {
+          "label": "0%",
+          "points": 10
+        },
+        {
+          "label": "Up to 54%",
+          "points": 5
+        },
+        {
+          "label": "54% to 76%",
+          "points": 1
+        },
+        {
+          "label": "76% to 85%",
+          "points": -5
+        },
+        {
+          "label": "Over 85%",
+          "points": -11
+        },
+        {
+          "label": "No open loans at other lenders",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "feature": "BUREAU_CARD_UTILISATION",
+      "group": "Loans at other lenders",
+      "question": "Credit card use at other lenders",
+      "default": 5,
+      "typical": 1.3,
+      "answers": [
+        {
+          "label": "Up to 30%",
+          "points": 13
+        },
+        {
+          "label": "30% to 57%",
+          "points": 0
+        },
+        {
+          "label": "57% to 77%",
+          "points": -5
+        },
+        {
+          "label": "77% to 97%",
+          "points": -12
+        },
+        {
+          "label": "Over 97%",
+          "points": -26
+        },
+        {
+          "label": "No open card at other lenders",
+          "points": 3
+        }
+      ]
+    },
+    {
+      "feature": "INST_LATE_RATE_RECENCY_WEIGHTED",
+      "group": "History with Home Credit",
+      "question": "Share of recent instalments paid late",
+      "default": 0,
+      "typical": 1.5,
+      "answers": [
+        {
+          "label": "Up to 4%",
+          "points": 10
+        },
+        {
+          "label": "4% to 7%",
+          "points": -3
+        },
+        {
+          "label": "7% to 29%",
+          "points": -14
+        },
+        {
+          "label": "Over 29%",
+          "points": -28
+        },
+        {
+          "label": "No instalment history",
+          "points": 15
+        }
+      ]
+    },
+    {
+      "feature": "INST_DAYS_LATE_MAX_12M",
+      "group": "History with Home Credit",
+      "question": "Worst lateness in the last 12 months",
+      "default": 0,
+      "typical": 0.8,
+      "answers": [
+        {
+          "label": "0 days",
+          "points": 5
+        },
+        {
+          "label": "1 to 2 days",
+          "points": -4
+        },
+        {
+          "label": "3 to 6 days",
+          "points": -9
+        },
+        {
+          "label": "7 or more days",
+          "points": -20
+        },
+        {
+          "label": "Nothing due in the last 12 months",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "feature": "PREV_REFUSED_RATE",
+      "group": "History with Home Credit",
+      "question": "Share of past applications refused",
+      "default": 0,
+      "typical": 1.0,
+      "answers": [
+        {
+          "label": "Up to 6%",
+          "points": 5
+        },
+        {
+          "label": "6% to 16%",
+          "points": 3
+        },
+        {
+          "label": "16% to 28%",
+          "points": -3
+        },
+        {
+          "label": "28% to 44%",
+          "points": -11
+        },
+        {
+          "label": "Over 44%",
+          "points": -21
+        },
+        {
+          "label": "No past applications",
+          "points": 11
+        }
+      ]
+    },
+    {
+      "feature": "PREV_DAYS_SINCE_LAST_REFUSAL",
+      "group": "History with Home Credit",
+      "question": "Time since the last refusal",
+      "default": 4,
+      "typical": 0.8,
+      "answers": [
+        {
+          "label": "Up to 8 months",
+          "points": -12
+        },
+        {
+          "label": "8 months to 16 months",
+          "points": -8
+        },
+        {
+          "label": "16 months to 32 months",
+          "points": -7
+        },
+        {
+          "label": "Over 32 months",
+          "points": 4
+        },
+        {
+          "label": "No refusal on record",
+          "points": 4
+        }
+      ]
+    },
+    {
+      "feature": "CC_UTILISATION_NOW",
+      "group": "History with Home Credit",
+      "question": "Home Credit card use now",
+      "default": 2,
+      "typical": 0.6,
+      "answers": [
+        {
+          "label": "Up to 87%",
+          "points": 8
+        },
+        {
+          "label": "Over 87%",
+          "points": -25
+        },
+        {
+          "label": "No Home Credit card in use",
+          "points": 1
+        }
+      ]
+    },
+    {
+      "feature": "CC_UTILISATION_MEAN",
+      "group": "History with Home Credit",
+      "question": "Home Credit card use over time",
+      "default": 3,
+      "typical": 0.7,
+      "answers": [
+        {
+          "label": "Up to 12%",
+          "points": 8
+        },
+        {
+          "label": "12% to 55%",
+          "points": 0
+        },
+        {
+          "label": "Over 55%",
+          "points": -12
+        },
+        {
+          "label": "No Home Credit card",
+          "points": 1
+        }
+      ]
+    }
+  ]
+}
