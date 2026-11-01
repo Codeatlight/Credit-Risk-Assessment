@@ -13,6 +13,9 @@ from scoring import is_approved, load_card, reasons, risk_of_default, score
 SCORE_LOW = 300
 SCORE_HIGH = 800
 BACKGROUND = Path(__file__).parent / "background.svg"
+EXPLORER = Path(__file__).parent / "explorer.html"
+STATS = Path(__file__).parent / "stats.json"
+EXPLORER_HEIGHT = 640
 
 STYLE = """
 <style>
@@ -24,7 +27,7 @@ STYLE = """
 [data-testid="stAppViewContainer"], [data-testid="stHeader"] {background: transparent}
 [data-testid="stAppViewContainer"] {position: relative; z-index: 1}
 .st-key-layout [data-testid="stSelectbox"] > div > div {background: #FFFFFF}
-.st-key-form-panel, .st-key-notes-panel {background: #F4F6F6; padding: 1.5rem}
+.st-key-form-panel, .st-key-notes-panel, .st-key-explorer-panel {background: #F4F6F6; padding: 1.5rem}
 .block-container {max-width: 1240px; padding-top: 2.5rem; padding-bottom: 4rem}
 h1 {font-size: 3rem; letter-spacing: -0.02em; line-height: 1.05}
 h2 {font-size: 1.35rem; letter-spacing: -0.01em}
@@ -35,9 +38,28 @@ h2 {font-size: 1.35rem; letter-spacing: -0.01em}
 .decision.refuse {color: #B3261E}
 .score {font-size: 5.5rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em;
         font-variant-numeric: tabular-nums; margin: 0.25rem 0 0.5rem}
-.risk {font-size: 1.1rem; margin: 0 0 1.25rem}
+.risk {font-size: 1.1rem; margin: 0 0 0.25rem}
+@property --n {syntax: "\\3C integer\\3E "; inherits: false; initial-value: 0}
+.count {--n: var(--to); counter-reset: score var(--n); animation: count 0.7s cubic-bezier(.2, .8, .2, 1)}
+.count::after {content: counter(score)}
+@keyframes count {from {--n: var(--from)} to {--n: var(--to)}}
+.hidden-text {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)}
+.change {font-size: 0.95rem; font-weight: 700; min-height: 1.5em; margin: 0 0 0.75rem;
+         animation: pop 0.4s ease-out}
+.change.up {color: #0F6B62}
+.change.down {color: #B3261E}
+@keyframes pop {from {opacity: 0; transform: translateY(6px)} to {opacity: 1; transform: none}}
+.decision.flipped {animation: flip 0.5s ease-out; transform-origin: left}
+@keyframes flip {from {transform: scale(1.25)} to {transform: scale(1)}}
 .scale {position: relative; height: 12px; background: #CBD6D5; margin: 0 0 0.4rem}
-.scale .fill {position: absolute; inset: 0 auto 0 0; background: #12242B}
+.scale .fill {position: absolute; inset: 0 auto 0 0; background: #12242B;
+              animation: slide 0.7s cubic-bezier(.2, .8, .2, 1)}
+@keyframes slide {from {width: var(--from-width)}}
+.ledger tbody tr {transition: background 0.15s}
+.ledger tbody tr:hover {background: #E6ECEB}
+@media (prefers-reduced-motion: reduce) {
+  .count, .change, .decision.flipped, .scale .fill {animation: none}
+}
 .scale .cutoff {position: absolute; top: -5px; bottom: -5px; width: 3px; background: #B3261E}
 .scale-note {font-size: 0.9rem; margin: 0 0 1.25rem}
 .reasons {margin: 0 0 1rem}
@@ -53,6 +75,7 @@ h2 {font-size: 1.35rem; letter-spacing: -0.01em}
   [data-testid="stColumn"]:has(.st-key-result) {position: static; align-self: stretch}
   .score {font-size: 4.5rem}
   .ledger .optional {display: none}
+  .st-key-explorer-panel iframe, .st-key-explorer-panel div:has(> iframe) {height: 800px !important}
 }
 </style>
 """
@@ -71,17 +94,27 @@ def reason_html(title, lines, empty):
     return f"<div class='reasons'><h3>{title}</h3>{rows or f'<p>{empty}</p>'}</div>"
 
 
-def result_html(total, risk, against, helping):
+def change_html(total, previous):
+    if total == previous:
+        return "<p class='change'></p>"
+    direction = "up" if total > previous else "down"
+    return f"<p class='change {direction}'>{total - previous:+d} points from the last change</p>"
+
+
+def result_html(total, previous, risk, against, helping):
     approved = is_approved(card, total)
     decision = "Approve" if approved else "Refuse"
+    flipped = " flipped" if approved != is_approved(card, previous) else ""
     cutoff = card["min_score"]
     return f"""
     <div role="status" aria-live="polite">
-      <p class="decision {decision.lower()}">{decision}</p>
-      <p class="score">{total}</p>
+      <p class="decision {decision.lower()}{flipped}">{decision}</p>
+      <p class="score"><span class="hidden-text">{total}</span>
+        <span class="count" aria-hidden="true" style="--from: {previous}; --to: {total}"></span></p>
       <p class="risk">{risk:.1%} estimated risk of default</p>
+      {change_html(total, previous)}
       <div class="scale" role="img" aria-label="Score {total} on a scale of {SCORE_LOW} to {SCORE_HIGH}, cutoff {cutoff}">
-        <div class="fill" style="width: {scale_position(total):.1f}%"></div>
+        <div class="fill" style="width: {scale_position(total):.1f}%; --from-width: {scale_position(previous):.1f}%"></div>
         <div class="cutoff" style="left: {scale_position(cutoff):.1f}%"></div>
       </div>
       <p class="scale-note">Red mark: cutoff of {cutoff}. Every 50 points doubles the odds of repaying.</p>
@@ -128,10 +161,16 @@ with form:
 
 total = score(card, answers)
 against, helping = reasons(card, answers)
+previous = st.session_state.get("last_score", total)
+st.session_state["last_score"] = total
 
 with result:
     with st.container(key="result"):
-        st.html(result_html(total, risk_of_default(card, total), against, helping))
+        st.html(result_html(total, previous, risk_of_default(card, total), against, helping))
+
+with st.container(key="explorer-panel"):
+    st.iframe(EXPLORER.read_text(encoding="utf-8").replace("__STATS__", STATS.read_text(encoding="utf-8")),
+              height=EXPLORER_HEIGHT)
 
 with st.container(key="notes-panel"):
     st.subheader("How the score adds up")

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {--ground: #F4F6F6; --step: #E6ECEB; --ink: #12242B; --quiet: #4A5B62; --accent: #0F6B62; --refuse: #B3261E; --tint: #E3B9B3}
+* {box-sizing: border-box}
+html {overflow-x: hidden}
+body {margin: 0; padding: 2px; background: var(--ground); color: var(--ink); font: 16px/1.45 "Source Sans Pro", "Source Sans 3", system-ui, sans-serif}
+h2 {font-size: 1.35rem; letter-spacing: -0.01em; margin: 0 0 0.25rem}
+p {margin: 0}
+button {font: inherit; color: inherit; cursor: pointer}
+:focus-visible {outline: 3px solid var(--accent); outline-offset: 2px}
+.tabs {display: flex; flex-wrap: wrap; gap: 4px; margin: 0.75rem 0 1.25rem}
+.tabs button {background: var(--step); border: 0; padding: 0.55rem 0.9rem; transition: background 0.2s, color 0.2s, transform 0.1s}
+.tabs button:hover {background: #D5DFDD}
+.tabs button:active {transform: scale(0.97)}
+.tabs button[aria-selected="true"] {background: var(--ink); color: #FFFFFF}
+.panel[hidden] {display: none}
+.panel.entering {animation: rise 0.3s ease-out}
+@keyframes rise {from {opacity: 0; transform: translateY(8px)} to {opacity: 1; transform: none}}
+.big-numbers {display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem}
+.big-numbers strong {display: block; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums}
+.big-numbers span {color: var(--quiet); font-size: 0.95rem}
+.controls {display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1rem}
+.controls label {display: block; font-size: 0.95rem}
+.controls output {font-weight: 700; font-variant-numeric: tabular-nums}
+input[type=range] {width: 100%; height: 28px; accent-color: var(--accent); cursor: pointer}
+.histogram {display: flex; align-items: flex-end; gap: 2px; height: 170px}
+.histogram div {flex: 1; min-height: 1px; background: var(--accent); transition: height 0.4s ease-out, background 0.25s}
+.histogram div.refused {background: var(--tint)}
+.axis {display: flex; justify-content: space-between; color: var(--quiet); font-size: 0.85rem; margin-top: 0.25rem}
+.note {color: var(--quiet); font-size: 0.9rem; margin-top: 0.75rem}
+.link {background: none; border: 0; padding: 0; text-decoration: underline; color: var(--accent)}
+.bands {display: flex; align-items: flex-end; gap: 6px; height: 210px}
+.bands button {flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; border: 0; background: none; padding: 0}
+.bands i {display: block; width: 100%; height: 0; background: var(--accent); transition: height 0.5s cubic-bezier(.2, .8, .2, 1), background 0.2s}
+.bands button.high i {background: var(--refuse)}
+.bands button:hover i, .bands button.picked i {background: var(--ink)}
+.band-labels {display: flex; gap: 6px; color: var(--quiet); font-size: 0.85rem; margin-top: 0.25rem}
+.band-labels span {flex: 1; text-align: center}
+.readout {margin-top: 0.9rem; font-size: 1.1rem; min-height: 3.2em}
+.switch {display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1rem}
+.switch button {background: var(--step); border: 0; padding: 0.4rem 0.8rem; transition: background 0.2s, color 0.2s}
+.switch button[aria-pressed="true"] {background: var(--accent); color: #FFFFFF}
+.model {margin-bottom: 0.8rem}
+.model p {display: flex; justify-content: space-between; gap: 1rem}
+.model b {font-variant-numeric: tabular-nums}
+.track {height: 16px; background: var(--step); margin-top: 0.2rem}
+.track i {display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.6s cubic-bezier(.2, .8, .2, 1)}
+.model.live .track i {background: var(--accent)}
+@media (max-width: 640px) {
+  .big-numbers {gap: 0.5rem}
+  .big-numbers strong {font-size: 1.6rem}
+  .controls {grid-template-columns: 1fr; gap: 0.5rem}
+  .histogram {height: 110px}
+  .bands {height: 170px}
+  .band-labels {font-size: 0.72rem}
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {animation: none !important; transition: none !important}
+}
+</style>
+</head>
+<body>
+<h2>Explore the results</h2>
+<p>Real results from 61,503 applicants the model never trained on.</p>
+<div class="tabs" role="tablist" aria-label="Result views">
+  <button role="tab" id="tab-cutoff" aria-controls="cutoff" aria-selected="true">Try a cutoff</button>
+  <button role="tab" id="tab-bands" aria-controls="bands" aria-selected="false" tabindex="-1">Risk by score</button>
+  <button role="tab" id="tab-models" aria-controls="models" aria-selected="false" tabindex="-1">Compare models</button>
+</div>
+
+<section class="panel" id="cutoff" role="tabpanel" aria-labelledby="tab-cutoff">
+  <div class="big-numbers" aria-live="polite">
+    <p><strong id="approved"></strong><span>approved</span></p>
+    <p><strong id="default-rate"></strong><span>of those default</span></p>
+    <p><strong id="profit"></strong><span>profit per applicant</span></p>
+  </div>
+  <div class="controls">
+    <label>Cutoff score: <output id="cutoff-value"></output>
+      <input type="range" id="cutoff-range" step="5"></label>
+    <label>Earned on a repaid loan: <output id="margin-value"></output>
+      <input type="range" id="margin-range" min="5" max="30" step="1"></label>
+    <label>Lost on a default: <output id="loss-value"></output>
+      <input type="range" id="loss-range" min="20" max="100" step="5"></label>
+  </div>
+  <div class="histogram" id="histogram" aria-hidden="true"></div>
+  <div class="axis" aria-hidden="true"><span id="axis-low"></span><span>Score, with refused applicants in pink</span><span id="axis-high"></span></div>
+  <p class="note"><span id="best"></span> <button class="link" id="reset">Reset to the app's settings</button></p>
+</section>
+
+<section class="panel" id="bands" role="tabpanel" aria-labelledby="tab-bands" hidden>
+  <div class="bands" id="band-bars"></div>
+  <div class="band-labels" id="band-labels" aria-hidden="true"></div>
+  <p class="readout" id="band-readout" aria-live="polite"></p>
+</section>
+
+<section class="panel" id="models" role="tabpanel" aria-labelledby="tab-models" hidden>
+  <div class="switch">
+    <button id="show-auc" aria-pressed="true">Accuracy (AUC)</button>
+    <button id="show-profit" aria-pressed="false">Profit per applicant</button>
+  </div>
+  <div id="model-bars"></div>
+  <p class="note" id="model-note"></p>
+</section>
+
+<script>
+const stats = __STATS__;
+const $ = id => document.getElementById(id);
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const shown = {};
+
+function countTo(element, value, format) {
+  const from = shown[element.id] ?? value;
+  shown[element.id] = value;
+  if (calm || from === value) { element.textContent = format(value); return; }
+  const start = performance.now();
+  cancelAnimationFrame(element.frame);
+  clearTimeout(element.finish);
+  element.finish = setTimeout(() => {  // lands on the true value even if frames are paused
+    cancelAnimationFrame(element.frame);
+    element.textContent = format(value);
+  }, 400);
+  const step = now => {
+    const t = Math.min((now - start) / 350, 1);
+    element.textContent = format(from + (value - from) * (1 - (1 - t) ** 3));
+    if (t < 1) element.frame = requestAnimationFrame(step);
+  };
+  element.frame = requestAnimationFrame(step);
+}
+
+const percent = v => `${v.toFixed(1)}%`;
+const money = v => `${v < 0 ? "-" : ""}${Math.round(Math.abs(v)).toLocaleString("en-US")}`;
+const bins = stats.bins;
+const tallest = Math.max(...bins.map(b => b.applicants));
+const scoreRange = $("cutoff-range");
+scoreRange.min = bins[1].score;
+scoreRange.max = bins[bins.length - 1].score;
+$("axis-low").textContent = `${bins[0].score} or less`;
+$("axis-high").textContent = `${bins[bins.length - 1].score} or more`;
+
+const bars = bins.map(bin => {
+  const bar = document.createElement("div");
+  bar.style.height = `${100 * bin.applicants / tallest}%`;
+  $("histogram").append(bar);
+  return bar;
+});
+
+function profitAt(cutoff, margin, loss) {
+  return bins.filter(b => b.score >= cutoff)
+    .reduce((sum, b) => sum + margin * b.good_credit - loss * b.bad_credit, 0) / stats.applicants;
+}
+
+function updateCutoff() {
+  const cutoff = +scoreRange.value, margin = $("margin-range").value / 100, loss = $("loss-range").value / 100;
+  const kept = bins.filter(b => b.score >= cutoff);
+  const people = kept.reduce((sum, b) => sum + b.applicants, 0);
+  const defaults = kept.reduce((sum, b) => sum + b.defaults, 0);
+  $("cutoff-value").textContent = cutoff;
+  $("margin-value").textContent = `${$("margin-range").value}%`;
+  $("loss-value").textContent = `${$("loss-range").value}%`;
+  countTo($("approved"), 100 * people / stats.applicants, percent);
+  countTo($("default-rate"), people ? 100 * defaults / people : 0, percent);
+  countTo($("profit"), profitAt(cutoff, margin, loss), money);
+  bars.forEach((bar, i) => bar.classList.toggle("refused", bins[i].score < cutoff));
+  const options = bins.slice(1).map(b => b.score);
+  const best = options.reduce((a, b) => profitAt(b, margin, loss) > profitAt(a, margin, loss) ? b : a);
+  $("best").textContent = `On these applicants, profit peaks at a cutoff of ${best}. ` +
+    `The app's ${stats.min_score} was fixed earlier on training data, so it wasn't tuned to this test.`;
+}
+
+function resetCutoff() {
+  scoreRange.value = stats.min_score;
+  $("margin-range").value = stats.margin * 100;
+  $("loss-range").value = stats.loss * 100;
+  updateCutoff();
+}
+["cutoff-range", "margin-range", "loss-range"].forEach(id => $(id).addEventListener("input", updateCutoff));
+$("reset").addEventListener("click", resetCutoff);
+
+const bands = stats.bands.filter(b => b.applicants > 0);
+const worst = Math.max(...bands.map(b => 100 * b.defaults / b.applicants));
+const bandBars = bands.map(band => {
+  const rate = 100 * band.defaults / band.applicants;
+  const button = document.createElement("button");
+  button.setAttribute("aria-label", `Scores from ${band.score}`);
+  button.innerHTML = "<i></i>";
+  button.classList.toggle("high", band.score < stats.min_score);
+  const pick = () => {
+    bandBars.forEach(b => b.classList.remove("picked"));
+    button.classList.add("picked");
+    $("band-readout").textContent = `Scores ${band.score} to ${band.score + 49}: ${rate.toFixed(1)}% of ` +
+      `${band.applicants.toLocaleString("en-US")} applicants ran into payment trouble.`;
+  };
+  ["mouseenter", "focus", "click"].forEach(name => button.addEventListener(name, pick));
+  $("band-bars").append(button);
+  const label = document.createElement("span");
+  label.textContent = band.score;
+  $("band-labels").append(label);
+  button.pick = pick;
+  button.rate = rate;
+  return button;
+});
+
+function growBands() {
+  bandBars.forEach(button => { button.firstChild.style.height = "0"; });
+  setTimeout(() => bandBars.forEach(button => {
+    button.firstChild.style.height = `${96 * button.rate / worst}%`;
+  }), 30);
+  bandBars[Math.floor(bandBars.length / 2)].pick();
+}
+
+const LIVE = 0;
+const modelRows = stats.models.map((model, i) => {
+  const row = document.createElement("div");
+  row.className = i === LIVE ? "model live" : "model";
+  const name = `${model.name}, ${model.external ? "with" : "without"} EXT_SOURCE${i === LIVE ? " (this app)" : ""}`;
+  row.innerHTML = `<p><span>${name}</span><b></b></p><div class="track"><i></i></div>`;
+  $("model-bars").append(row);
+  return row;
+});
+
+function showModels(metric) {
+  $("show-auc").setAttribute("aria-pressed", metric === "auc");
+  $("show-profit").setAttribute("aria-pressed", metric === "profit");
+  const floor = metric === "auc" ? 0.5 : 54000, top = metric === "auc" ? 0.8 : 61000;
+  modelRows.forEach((row, i) => {
+    const value = stats.models[i][metric];
+    row.querySelector("b").textContent = metric === "auc" ? value.toFixed(3) : money(value);
+    row.querySelector("i").style.width = "0";
+    setTimeout(() => {
+      row.querySelector("i").style.width = `${100 * (value - floor) / (top - floor)}%`;
+    }, 30);
+  });
+  $("model-note").textContent = metric === "auc"
+    ? "Bars start at 0.5, which is no better than guessing. Higher is better."
+    : "Bars start at 54,000. Profit assumes 15% earned and 60% lost, each at its own best cutoff.";
+}
+$("show-auc").addEventListener("click", () => showModels("auc"));
+$("show-profit").addEventListener("click", () => showModels("profit"));
+
+const tabs = [...document.querySelectorAll("[role=tab]")];
+function openTab(tab) {
+  tabs.forEach(other => {
+    const active = other === tab;
+    other.setAttribute("aria-selected", active);
+    other.tabIndex = active ? 0 : -1;
+    const panel = $(other.getAttribute("aria-controls"));
+    panel.hidden = !active;
+    panel.classList.toggle("entering", active);
+  });
+  if (tab.id === "tab-bands") growBands();
+  if (tab.id === "tab-models") showModels("auc");
+}
+tabs.forEach((tab, i) => {
+  tab.addEventListener("click", () => openTab(tab));
+  tab.addEventListener("keydown", event => {
+    const move = {ArrowRight: 1, ArrowLeft: -1}[event.key];
+    if (!move) return;
+    const next = tabs[(i + move + tabs.length) % tabs.length];
+    next.focus();
+    openTab(next);
+  });
+});
+
+resetCutoff();
+</script>
+</body>
+</html>
