@@ -1,5 +1,7 @@
 # Credit Risk Scorecard
 
+![Banner](docs/banner.png)
+
 Should a lender approve this applicant? This project predicts the chance of default, turns it into an explainable points-based score, and picks an approval cutoff by weighing the money lost on defaults against the interest earned.
 
 > Status: all 9 planned steps are done, from data exploration to a working app. Final results are below.
@@ -26,7 +28,17 @@ Should a lender approve this applicant? This project predicts the chance of defa
 6. **Evaluate.** AUC, Gini, KS statistic, and calibration (does a predicted 10% risk really default about 10% of the time?). `python -m src.evaluate` scores the holdout once and then refuses to run again. Full tables are in the [holdout report](reports/holdout_results.md).
 7. **Business decision.** Choose the approval cutoff from expected profit. Loss per default and interest margin are assumptions, stated openly, with a sensitivity table. Run `python -m src.cutoff`. Results are in the [cutoff report](reports/cutoff_results.md).
 8. **Explain and check fairness.** SHAP reasons for individual decisions; compare approval and error rates across gender and age groups. Run `python -m src.reasons` and `python -m src.fairness`. See the [reasons report](reports/reasons_results.md) and [fairness report](reports/fairness_results.md).
-9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons. It uses the scorecard without `EXT_SOURCE`, so every point can be explained, and needs only `app/scorecard.json`, not the raw data. `python -m src.export_app` rebuilds that file.
+9. **App.** A Streamlit page: enter an applicant, see the score, decision and top reasons. It uses the scorecard without `EXT_SOURCE`, so every point can be explained, and needs only `app/scorecard.json`, not the raw data. `python -m src.export_app`, `python -m src.export_stats` and `python -m src.make_background` rebuild its data files.
+
+## The app
+
+A home page explains the project with a worked example, and the Scorecard page turns 15 answers into a score, a decision and the reasons. A results explorer lets you drag the cutoff and profit assumptions, and the Night Vault dark theme glows from red to green with the score.
+
+![Home page](docs/home.jpg)
+
+![Scorecard in the light theme](docs/app-light.jpg)
+
+![Scorecard in the Night Vault theme](docs/app-night-vault.jpg)
 
 ## Project layout
 
@@ -39,6 +51,7 @@ models/            Saved models (not in git)
 app/               Streamlit app and the points it needs
 reports/           Feature dictionary, sanity report, baseline, scorecard, challenger, holdout, cutoff, reasons and fairness results
 reports/figures/   Charts for the README
+docs/              Banner and app screenshots
 ```
 
 ## Setup

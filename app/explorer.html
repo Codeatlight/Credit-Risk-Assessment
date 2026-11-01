@@ -1,58 +1,64 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="__THEME__">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-:root {--ground: #F4F6F6; --step: #E6ECEB; --ink: #12242B; --quiet: #4A5B62; --accent: #0F6B62; --refuse: #B3261E; --tint: #E3B9B3}
+:root {--ground: #FFFFFF; --step: #EEF1F7; --ink: #101828; --quiet: #667085; --accent: #2F5BEA; --refuse: #D92D20; --tint: #FBC9C4; --card: #F5F7FB; --raised: #FFFFFF; --on-accent: #FFFFFF; --muted-bar: #98A2B3}
+[data-theme="night"] {color-scheme: dark; --ground: #12171F; --step: #1A212C; --ink: #F3F5F8; --quiet: #A3AFBF; --accent: #E8B44C; --refuse: #F87171; --tint: #5A2A2A; --card: #1A212C; --raised: #2A3442; --on-accent: #12171F; --muted-bar: #5B6879}
 * {box-sizing: border-box}
 html {overflow-x: hidden}
-body {margin: 0; padding: 2px; background: var(--ground); color: var(--ink); font: 16px/1.45 "Source Sans Pro", "Source Sans 3", system-ui, sans-serif}
-h2 {font-size: 1.35rem; letter-spacing: -0.01em; margin: 0 0 0.25rem}
+body {margin: 0; padding: 2px; background: var(--ground); color: var(--ink); font: 15px/1.45 Inter, system-ui, sans-serif}
+h2 {font-size: 1.2rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.25rem}
 p {margin: 0}
 button {font: inherit; color: inherit; cursor: pointer}
 :focus-visible {outline: 3px solid var(--accent); outline-offset: 2px}
-.tabs {display: flex; flex-wrap: wrap; gap: 4px; margin: 0.75rem 0 1.25rem}
-.tabs button {background: var(--step); border: 0; padding: 0.55rem 0.9rem; transition: background 0.2s, color 0.2s, transform 0.1s}
-.tabs button:hover {background: #D5DFDD}
+.tabs {display: inline-flex; flex-wrap: wrap; gap: 2px; margin: 0.75rem 0 1.25rem; padding: 4px; background: var(--step); border-radius: 12px}
+.tabs button {background: transparent; border: 0; border-radius: 9px; padding: 0.45rem 0.9rem; font-weight: 500; color: var(--quiet); transition: background 0.2s, color 0.2s, transform 0.1s}
+.tabs button:hover {color: var(--ink)}
 .tabs button:active {transform: scale(0.97)}
-.tabs button[aria-selected="true"] {background: var(--ink); color: #FFFFFF}
+.tabs button[aria-selected="true"] {background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1)}
 .panel[hidden] {display: none}
 .panel.entering {animation: rise 0.3s ease-out}
 @keyframes rise {from {opacity: 0; transform: translateY(8px)} to {opacity: 1; transform: none}}
 .big-numbers {display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem}
-.big-numbers strong {display: block; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums}
+.big-numbers p {background: var(--card); border-radius: 12px; padding: 0.8rem 1rem}
+.big-numbers strong {display: block; font-size: 1.9rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; font-variant-numeric: tabular-nums}
 .big-numbers span {color: var(--quiet); font-size: 0.95rem}
 .controls {display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1rem}
 .controls label {display: block; font-size: 0.95rem}
 .controls output {font-weight: 700; font-variant-numeric: tabular-nums}
 input[type=range] {width: 100%; height: 28px; accent-color: var(--accent); cursor: pointer}
 .histogram {display: flex; align-items: flex-end; gap: 2px; height: 170px}
-.histogram div {flex: 1; min-height: 1px; background: var(--accent); transition: height 0.4s ease-out, background 0.25s}
+.histogram div {flex: 1; min-height: 1px; border-radius: 2px 2px 0 0; background: var(--accent); transition: height 0.4s ease-out, background 0.25s}
 .histogram div.refused {background: var(--tint)}
 .axis {display: flex; justify-content: space-between; color: var(--quiet); font-size: 0.85rem; margin-top: 0.25rem}
 .note {color: var(--quiet); font-size: 0.9rem; margin-top: 0.75rem}
 .link {background: none; border: 0; padding: 0; text-decoration: underline; color: var(--accent)}
 .bands {display: flex; align-items: flex-end; gap: 6px; height: 210px}
 .bands button {flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; border: 0; background: none; padding: 0}
-.bands i {display: block; width: 100%; height: 0; background: var(--accent); transition: height 0.5s cubic-bezier(.2, .8, .2, 1), background 0.2s}
+.bands i {display: block; width: 100%; height: 0; border-radius: 6px 6px 0 0; background: var(--accent); transition: height 0.5s cubic-bezier(.2, .8, .2, 1), background 0.2s}
 .bands button.high i {background: var(--refuse)}
 .bands button:hover i, .bands button.picked i {background: var(--ink)}
 .band-labels {display: flex; gap: 6px; color: var(--quiet); font-size: 0.85rem; margin-top: 0.25rem}
 .band-labels span {flex: 1; text-align: center}
 .readout {margin-top: 0.9rem; font-size: 1.1rem; min-height: 3.2em}
 .switch {display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1rem}
-.switch button {background: var(--step); border: 0; padding: 0.4rem 0.8rem; transition: background 0.2s, color 0.2s}
-.switch button[aria-pressed="true"] {background: var(--accent); color: #FFFFFF}
+.switch button {background: var(--step); border: 0; border-radius: 9px; padding: 0.4rem 0.8rem; font-weight: 500; transition: background 0.2s, color 0.2s}
+.switch button[aria-pressed="true"] {background: var(--accent); color: var(--on-accent)}
 .model {margin-bottom: 0.8rem}
 .model p {display: flex; justify-content: space-between; gap: 1rem}
 .model b {font-variant-numeric: tabular-nums}
-.track {height: 16px; background: var(--step); margin-top: 0.2rem}
-.track i {display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.6s cubic-bezier(.2, .8, .2, 1)}
+.track {height: 14px; border-radius: 7px; overflow: hidden; background: var(--step); margin-top: 0.2rem}
+.track i {display: block; height: 100%; width: 0; border-radius: 7px; background: var(--muted-bar); transition: width 0.6s cubic-bezier(.2, .8, .2, 1)}
 .model.live .track i {background: var(--accent)}
 @media (max-width: 640px) {
   .big-numbers {gap: 0.5rem}
-  .big-numbers strong {font-size: 1.6rem}
+  .big-numbers p {padding: 0.6rem}
+  .big-numbers strong {font-size: 1.25rem}
+  .big-numbers span {font-size: 0.8rem}
   .controls {grid-template-columns: 1fr; gap: 0.5rem}
   .histogram {height: 110px}
   .bands {height: 170px}
