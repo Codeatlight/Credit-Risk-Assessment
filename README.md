@@ -40,15 +40,15 @@ A home page explains the project with a worked example, and the Scorecard page t
 
 The look is a bank's: banknote-style engraving in the background, pages that open with a vault code turning green, and a scrollbar shaped like an account that takes deposits as you scroll down and withdrawals as you scroll up. The balance is decoration and has nothing to do with the score.
 
-![Home page](docs/home.jpg)
+![Home page](docs/screen-home.jpg)
 
-![Scorecard in the light theme](docs/app-light.jpg)
+![Scorecard in the light theme](docs/screen-light.jpg)
 
-![Scorecard in the Night Vault theme](docs/app-night-vault.jpg)
+![Scorecard in the Night Vault theme](docs/screen-night-vault.jpg)
 
-![Vault code on a page change](docs/vault.jpg)
+![Vault code on a page change](docs/screen-vault.jpg)
 
-![Scrolling down deposits money into the account rail](docs/deposit-rail.jpg)
+![Scrolling down deposits money into the account rail](docs/screen-deposit-rail.jpg)
 
 ## Project layout
 
