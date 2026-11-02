@@ -36,13 +36,19 @@ Should a lender approve this applicant? This project predicts the chance of defa
 
 ## The app
 
-A home page explains the project with a worked example, and the Scorecard page turns 15 answers into a score, a decision and the reasons. A results explorer lets you drag the cutoff and profit assumptions, and the Night Vault dark theme glows from red to green with the score.
+A home page explains the project with a worked example, and the Scorecard page turns 15 answers into a score, a decision and the reasons. Sample applicants fill in the form with one click, and a button applies the single change that would raise the score most. A results explorer lets you drag the cutoff and profit assumptions, and the Night Vault dark theme glows from red to green with the score.
+
+The look is a bank's: banknote-style engraving in the background, pages that open with a vault code turning green, and a scrollbar shaped like an account that takes deposits as you scroll down and withdrawals as you scroll up. The balance is decoration and has nothing to do with the score.
 
 ![Home page](docs/home.jpg)
 
 ![Scorecard in the light theme](docs/app-light.jpg)
 
 ![Scorecard in the Night Vault theme](docs/app-night-vault.jpg)
+
+![Vault code on a page change](docs/vault.jpg)
+
+![Scrolling down deposits money into the account rail](docs/deposit-rail.jpg)
 
 ## Project layout
 

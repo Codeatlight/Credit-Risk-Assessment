@@ -2,6 +2,7 @@
 
 Run from the project root:  streamlit run app/streamlit_app.py
 """
+import json
 from base64 import b64encode
 from html import escape
 from pathlib import Path
@@ -13,6 +14,11 @@ from scoring import is_approved, load_card, reasons, risk_of_default, score
 SCORE_LOW = 300
 SCORE_HIGH = 800
 BACKGROUND = Path(__file__).parent / "background.svg"
+ART = Path(__file__).parent / "art"
+PASSBOOK = Path(__file__).parent / "passbook.js"
+VAULT_CODE = "7041"
+PROFILES = {"Strong borrower": "best", "Typical applicant": "typical", "Overstretched": "weak"}
+FIXED_GROUP = "Job"  # not something an applicant changes quickly, so never a suggested step
 EXPLORER = Path(__file__).parent / "explorer.html"
 STATS = Path(__file__).parent / "stats.json"
 EXPLORER_HEIGHT = 640
@@ -40,6 +46,7 @@ STYLE = """
 .home .stats {grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))}
 .preview {background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; padding: 1.25rem}
 .preview .reasons {margin: 0.6rem 0 0}
+.st-key-rail {position: absolute; height: 0; overflow: hidden}
 .st-key-cta {margin: 0.25rem 0 0.5rem}
 .hero h1 {color: #FFFFFF; font-size: 2.6rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
           margin: 0; padding: 0}
@@ -132,7 +139,68 @@ STYLE = """
 .source-note {color: var(--quiet); font-size: 0.85rem; margin: 0.75rem 0 0}
 .stApp, .card, [class*="st-key-group-"], .st-key-result, .st-key-explorer-panel, .st-key-notes-panel {
   transition: background 0.3s, border-color 0.3s, box-shadow 0.5s}
+[data-testid="stMainBlockContainer"] {position: relative; z-index: 1}
+[data-testid="stAppViewContainer"], [data-testid="stMain"] {background: transparent}
+.scene {position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden}
+.scene i {position: absolute; display: block; background: var(--engrave); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+          -webkit-mask-size: 100% 100%; mask-size: 100% 100%}
+.scene .one {top: -230px; left: -230px; width: 620px; height: 620px; opacity: 0.34; animation: turn 150s linear infinite}
+.scene .two {bottom: -330px; right: -300px; width: 860px; height: 860px; opacity: 0.3; animation: turn 190s linear infinite reverse}
+.scene .wave-left {top: 0; bottom: 0; left: 0; width: 170px; opacity: 0.2}
+.scene .wave-right {top: 0; bottom: 0; right: 60px; width: 170px; opacity: 0.2}
+@keyframes turn {to {transform: rotate(360deg)}}
+.vault {position: fixed; inset: 0; z-index: 9999; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden}
+.vault b {background: repeating-linear-gradient(0deg, #1B2A47 0 40px, #16223A 40px 80px); animation: left 0.34s 0.62s cubic-bezier(.7, 0, .3, 1) both}
+.vault b + b {animation-name: right; border-left: 3px solid #D9A62E}
+.lock {position: fixed; top: 50%; left: 50%; z-index: 10000; pointer-events: none; width: 230px; height: 230px; margin: -115px;
+       border-radius: 50%; background: #101A2E; border: 10px solid #D9A62E; display: grid; align-content: center; justify-items: center; gap: 0.7rem;
+       animation: granted 0.16s 0.4s ease-out both, leave 0.16s 0.6s ease-in both}
+.pad {display: flex; gap: 0.4rem}
+.pad i {width: 38px; height: 48px; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 1.6rem; color: #F4F5F7;
+        background: #1F2E4D; border-radius: 6px; animation: digit 0.09s ease-out both}
+.pad i:nth-child(1) {animation-delay: 0.05s} .pad i:nth-child(2) {animation-delay: 0.13s}
+.pad i:nth-child(3) {animation-delay: 0.21s} .pad i:nth-child(4) {animation-delay: 0.29s}
+.lock em {font-style: normal; font-weight: 700; color: #4ADE80; font-size: 1.05rem; animation: appear 0.1s 0.42s both}
+@keyframes digit {from {opacity: 0; transform: scale(1.5)} to {opacity: 1; transform: none}}
+@keyframes granted {to {border-color: #22C55E; box-shadow: 0 0 34px #22C55E}}
+@keyframes appear {from {opacity: 0} to {opacity: 1}}
+@keyframes left {to {transform: translateX(-102%)}}
+@keyframes right {to {transform: translateX(102%)}}
+@keyframes leave {to {opacity: 0; transform: scale(0.8)}}
+#passbook {position: fixed; top: 74px; bottom: 26px; right: 8px; z-index: 900; width: 96px; display: flex; flex-direction: column;
+           align-items: center; gap: 0.15rem; color: var(--ink); font-variant-numeric: tabular-nums}
+#passbook.idle {opacity: 0.45}
+#passbook small {color: var(--quiet); font-size: 0.72rem}
+#passbook .amount {font-size: 0.82rem; font-weight: 700}
+#passbook .tube {position: relative; flex: 1; width: 16px; margin: 1.5rem 0 1.1rem; border-radius: 8px; background: var(--tint);
+                 border: 1px solid var(--field-line); cursor: grab; touch-action: none}
+#passbook .fill {position: absolute; top: 0; left: 0; right: 0; border-radius: 8px; background: #22A06B; transition: height 0.08s linear}
+#passbook .coin {position: absolute; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #D9A62E; color: #1B2A47;
+                 border: 2px solid #1B2A47; display: grid; place-items: center; font-weight: 700; transition: top 0.08s linear, transform 0.25s}
+#passbook .coin.flip {transform: rotateY(180deg)}
+#passbook .slip {position: absolute; top: 46%; right: 104px; white-space: nowrap; padding: 0.35rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+                 color: #FFFFFF; opacity: 0; transform: translateX(10px); transition: opacity 0.14s, transform 0.14s; pointer-events: none}
+#passbook .slip.show {opacity: 1; transform: none}
+#passbook .slip.in {background: #15803D} #passbook .slip.out {background: #B42318}
+[data-testid="stMain"] {scrollbar-width: none}
+[data-testid="stMain"]::-webkit-scrollbar {display: none}
+.block-container {padding-right: 118px; padding-left: 118px}
+.card, [class*="st-key-group-"], .st-key-result, .preview, .plain div {transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s}
+.card:hover, [class*="st-key-group-"]:hover, .plain div:hover {transform: translateY(-3px); box-shadow: 0 8px 20px rgba(16, 24, 40, 0.14); border-color: var(--accent)}
+.reason {border-radius: 8px; transition: background 0.15s, padding 0.15s}
+.reason:hover {background: var(--tint); padding-left: 0.4rem; padding-right: 0.4rem}
+.st-key-profiles {background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 0.8rem 1rem}
+.profile-label {color: var(--ink); font-weight: 600; margin: 0}
+.st-key-next-box {background: var(--tint); border-radius: 12px; padding: 0.75rem}
+.next-title {color: var(--ink); font-size: 0.9rem; font-weight: 600; margin: 0}
+.next-note {color: var(--quiet); font-size: 0.8rem; margin: 0}
+@keyframes pagein {from {opacity: 0; transform: translateY(24px)} to {opacity: 1; transform: none}}
+.hero, .card, [class*="st-key-group-"], .st-key-result, .st-key-explorer-panel, .st-key-notes-panel {animation: pagein 0.55s 0.8s ease-out both}
+@media (max-width: 860px) {#passbook {display: none} [data-testid="stMain"] {scrollbar-width: auto}
+  .block-container {padding-right: 1rem; padding-left: 1rem} .scene .wave-left, .scene .wave-right {display: none}}
 @media (prefers-reduced-motion: reduce) {
+  .scene i, .hero, .card, [class*="st-key-group-"], .st-key-result, .st-key-explorer-panel, .st-key-notes-panel {animation: none}
+  .vault, .lock {display: none}
   .hero::before, .count, .change, .decision.flipped, .ring {animation: none}
 }
 @media (max-width: 960px) {
@@ -154,11 +222,11 @@ STYLE = """
 </style>
 """
 
-LIGHT = {"canvas": "#F5F7FB", "surface": "#FFFFFF", "tint": "#F5F7FB", "hero": "#0F1B33", "line": "#E4E8F0",
-         "line-soft": "#F0F2F7", "field": "#FFFFFF", "field-line": "#D0D5DD", "ink": "#101828", "quiet": "#667085",
+LIGHT = {"canvas": "#D5D9E0", "surface": "#E9EBEF", "tint": "#DDE0E6", "hero": "#0F1B33", "engrave": "#2D4A78", "line": "#C2C7D0",
+         "line-soft": "#D3D7DE", "field": "#F1F2F5", "field-line": "#AEB4BF", "ink": "#101828", "quiet": "#4C5563",
          "accent": "#2F5BEA", "on-accent": "#FFFFFF", "good": "#0E9F6E", "good-soft": "#D1FADF", "good-ink": "#05603A", "bad": "#D92D20",
          "bad-soft": "#FEE4E2", "bad-ink": "#912018"}
-NIGHT_VAULT = {"canvas": "#0A0D12", "surface": "#12171F", "tint": "#1A212C", "hero": "#12171F", "line": "#262F3C",
+NIGHT_VAULT = {"canvas": "#0A0D12", "surface": "#12171F", "tint": "#1A212C", "hero": "#12171F", "engrave": "#E8B44C", "line": "#262F3C",
                "line-soft": "#1D2530", "field": "#1A212C", "field-line": "#364152", "ink": "#F3F5F8", "quiet": "#A3AFBF",
                "accent": "#E8B44C", "on-accent": "#12171F", "good": "#34D399", "good-soft": "#10362B", "good-ink": "#6EE7B7", "bad": "#F87171",
                "bad-soft": "#431A1A", "bad-ink": "#FCA5A5"}
@@ -174,6 +242,7 @@ NIGHT_WIDGETS = """
 [data-testid="stSelectboxVirtualDropdown"] [role="option"], [data-testid="stSelectboxVirtualDropdown"] [role="option"] * {color: var(--ink)}
 [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover, [data-testid="stSelectboxVirtualDropdown"] [aria-selected="true"] {background: var(--line)}
 .hero {border: 1px solid var(--line)}
+.scene {opacity: 0.6}
 .hero::before {opacity: 0.13; filter: sepia(1) saturate(5) hue-rotate(-12deg)}
 .hero h1 {color: var(--accent)}
 .stApp::before {content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; transition: background 0.6s;
@@ -229,6 +298,66 @@ def aura_html(total):
     """Colour the glow by score: red at the bottom of the scale, through amber, to green at the top."""
     hue = round(dial_position(total) * 1.6)
     return f"<style>.stApp {{--aura: hsl({hue} 75% 55%); --aura-soft: hsl({hue} 75% 45% / 0.16)}}</style>"
+
+
+def mask(name):
+    return f"url('data:image/svg+xml;base64,{b64encode((ART / f'{name}.svg').read_bytes()).decode()}')"
+
+
+def art_html():
+    """Banknote engraving as masks, so its colour follows the theme."""
+    rosette, waves = mask("rosette"), mask("waves")
+    rules = (f".scene .one, .scene .two {{-webkit-mask-image: {rosette}; mask-image: {rosette}}}"
+             f".scene .wave-left, .scene .wave-right {{-webkit-mask-image: {waves}; mask-image: {waves}}}")
+    pieces = "".join(f"<i class='{name}'></i>" for name in ["one", "two", "wave-left", "wave-right"])
+    return f"<style>{rules}</style><div class='scene' aria-hidden='true'>{pieces}</div>"
+
+
+def passbook_html():
+    """Passes the scrollbar code to the main page, where the scrolling happens."""
+    code = json.dumps(PASSBOOK.read_text(encoding="utf-8")).replace("</", "<\\/")
+    return f"<script>const page = window.parent.document; const tag = page.createElement('script'); tag.textContent = {code}; page.body.appendChild(tag);</script>"
+
+
+def set_answers(chosen):
+    saved = st.session_state.setdefault("saved_answers", {})
+    for feature, position in chosen.items():
+        st.session_state[feature] = position
+        saved[feature] = position
+
+
+def profile_answers(kind):
+    """Answers for an example applicant, from each line's points."""
+    chosen = {}
+    for q in card["questions"]:
+        order = sorted(range(len(q["answers"])), key=lambda i: q["answers"][i]["points"])
+        chosen[q["feature"]] = {"best": order[-1], "typical": q["default"], "weak": order[len(order) // 4]}[kind]
+    return chosen
+
+
+def best_step(answers):
+    """The changeable answer worth the most extra points."""
+    steps = []
+    for q in card["questions"]:
+        if q["group"] == FIXED_GROUP:
+            continue
+        points = [a["points"] for a in q["answers"]]
+        best = max(range(len(points)), key=points.__getitem__)
+        steps.append((points[best] - points[answers[q["feature"]]], q, best))
+    gain, q, best = max(steps, key=lambda step: step[0])
+    return (gain, q, best) if gain > 0 else None
+
+
+def vault(page):
+    """Key in the code and open the doors the first time a page opens, not on every answer change."""
+    if st.session_state.get("shown_page") == page:
+        return
+    st.session_state["shown_page"] = page
+    st.session_state["visits"] = st.session_state.get("visits", 0) + 1
+    digits = "".join(f"<i>{digit}</i>" for digit in VAULT_CODE)
+    # The visit number changes the markup, otherwise Streamlit keeps the old finished animation
+    st.html(f"<div class='vault' data-visit='{st.session_state['visits']}' aria-hidden='true'><b></b><b></b></div>"
+            f"<div class='lock' aria-hidden='true'><div class='pad'>{digits}</div><em>Access granted</em></div>")
 
 
 def dial_position(value):
@@ -357,11 +486,15 @@ def plain_english_html():
 
 
 st.html(theme_html(night))
+st.html(art_html())
 page = st.session_state.get("page", "home")
+vault(page)
 with st.container(key="nav", horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
     st.button("Home", key="nav-home", on_click=go_to, args=("home",), type="primary" if page == "home" else "secondary")
     st.button("Scorecard", key="nav-tool", on_click=go_to, args=("tool",), type="primary" if page == "tool" else "secondary")
     st.toggle("Night Vault", key="night", help="Dark theme with a glow that follows the score")
+with st.container(key="rail"):
+    st.iframe(passbook_html(), height=1)
 
 if page == "home":
     st.html(home_html())
@@ -373,6 +506,10 @@ if page == "home":
 
 st.html(tool_header_html())
 saved = st.session_state.setdefault("saved_answers", {})
+with st.container(key="profiles", horizontal=True, vertical_alignment="center"):
+    st.html("<p class='profile-label'>Try an applicant:</p>")
+    for name, kind in PROFILES.items():
+        st.button(name, key=f"profile-{kind}", on_click=set_answers, args=(profile_answers(kind),))
 
 answers = {}
 with st.container(key="layout"):
@@ -388,8 +525,8 @@ with form:
             for position, q in enumerate(questions):
                 labels = [a["label"] for a in q["answers"]]
                 with left if position % 2 == 0 else right:
+                    st.session_state.setdefault(q["feature"], saved.get(q["feature"], q["default"]))
                     answers[q["feature"]] = st.selectbox(q["question"], range(len(labels)),
-                                                         index=saved.get(q["feature"], q["default"]),
                                                          format_func=labels.__getitem__, key=q["feature"])
                     saved[q["feature"]] = answers[q["feature"]]
 
@@ -402,6 +539,14 @@ st.html(aura_html(total))
 with result:
     with st.container(key="result"):
         st.html(result_html(total, previous, risk_of_default(card, total), against, helping))
+        step = best_step(answers)
+        if step:
+            gain, question, position = step
+            with st.container(key="next-box"):
+                st.html("<p class='next-title'>Biggest available gain</p>")
+                st.button(f"{question['question']}: {question['answers'][position]['label']} (+{gain})", key="next-step",
+                          width="stretch", on_click=set_answers, args=({question['feature']: position},))
+                st.html("<p class='next-note'>Shows how the points work, not financial advice.</p>")
 
 with st.container(key="explorer-panel"):
     explorer = EXPLORER.read_text(encoding="utf-8").replace("__STATS__", STATS.read_text(encoding="utf-8"))

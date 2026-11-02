@@ -1,10 +1,10 @@
 [theme]
 base = "light"
 primaryColor = "#2F5BEA"
-backgroundColor = "#F5F7FB"
-secondaryBackgroundColor = "#EEF1F7"
+backgroundColor = "#D5D9E0"
+secondaryBackgroundColor = "#DDE0E6"
 textColor = "#101828"
-borderColor = "#E4E8F0"
+borderColor = "#C2C7D0"
 baseRadius = "0.6rem"
 font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
 
